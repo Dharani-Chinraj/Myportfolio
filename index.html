@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dharani · data analyst portfolio</title>
+    <!-- Tailwind + Font Awesome + Google Fonts (Inter) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- GSAP & Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: #0b0c12;
+        color: #e2e8f0;
+        overflow-x: hidden;
+        position: relative;
+      }
+      /* shuttle theme: starfield background */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(
+            2px 2px at 20px 30px,
+            #fff,
+            rgba(0, 0, 0, 0)
+          ),
+          radial-gradient(2px 2px at 40px 70px, #aaccff, rgba(0, 0, 0, 0)),
+          radial-gradient(2px 2px at 80px 120px, #ffffff, rgba(0, 0, 0, 0)),
+          radial-gradient(2px 2px at 160px 50px, #99bbff, rgba(0, 0, 0, 0)),
+          radial-gradient(2px 2px at 300px 180px, #ffffff, rgba(0, 0, 0, 0)),
+          radial-gradient(2px 2px at 450px 300px, #cce0ff, rgba(0, 0, 0, 0)),
+          radial-gradient(2px 2px at 600px 400px, #ffffff, rgba(0, 0, 0, 0)),
+          radial-gradient(2px 2px at 750px 200px, #aaccff, rgba(0, 0, 0, 0)),
+          radial-gradient(2px 2px at 900px 500px, #ffffff, rgba(0, 0, 0, 0)),
+          radial-gradient(3px 3px at 150px 550px, #ffffff, rgba(0, 0, 0, 0));
+        background-size: 200px 200px;
+        background-repeat: repeat;
+        opacity: 0.3;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .glass {
+        background: rgba(18, 22, 32, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(100, 180, 255, 0.15);
+        box-shadow: 0 8px 32px rgba(0, 30, 60, 0.4);
+      }
+      /* profile container – perfect circle */
+      #profile-3d-container {
+        width: 100%;
+        height: min(40vh, 380px);
+        aspect-ratio: 1/1;
+        margin: 0 auto;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid rgba(100, 180, 255, 0.5);
+        box-shadow: 0 0 30px rgba(0, 180, 255, 0.3),
+          0 0 60px rgba(100, 0, 255, 0.2);
+      }
+      /* skill circular progress */
+      .skill-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 140px;
+      }
+      .skill-circle {
+        width: 120px;
+        height: 120px;
+        position: relative;
+        margin-top: 0.5rem;
+      }
+      .skill-circle svg {
+        width: 120px;
+        height: 120px;
+        transform: rotate(-90deg);
+      }
+      .skill-circle-bg {
+        stroke: #2a3342;
+        stroke-width: 7;
+        fill: none;
+      }
+      .skill-circle-progress {
+        stroke: url(#gradientSkill);
+        stroke-width: 7;
+        fill: none;
+        stroke-linecap: round;
+        stroke-dasharray: 314.159;
+        stroke-dashoffset: 314.159;
+        filter: drop-shadow(0 0 6px #3b9eff);
+      }
+      .skill-percent {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: white;
+        text-shadow: 0 0 10px #3b9eff;
+      }
+      .skill-icon {
+        font-size: 2.2rem;
+        margin-bottom: 0.25rem;
+        filter: drop-shadow(0 0 8px #3b9eff);
+        transition: transform 0.2s;
+      }
+      .skill-item:hover .skill-icon {
+        transform: scale(1.1) translateY(-3px);
+      }
+      /* project cards */
+      .project-card {
+        background: rgba(20, 26, 38, 0.8);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(100, 160, 255, 0.2);
+        transition: transform 0.25s ease, box-shadow 0.25s, border-color 0.25s;
+        transform-style: preserve-3d;
+      }
+      .project-card:hover {
+        transform: translateY(-6px) rotateX(1deg) rotateY(2deg);
+        border-color: rgba(100, 200, 255, 0.5);
+        box-shadow: 0 20px 40px rgba(0, 100, 255, 0.2);
+      }
+      .project-details {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease, opacity 0.3s ease, margin 0.3s;
+      }
+      .project-card.expanded .project-details {
+        max-height: 250px;
+        opacity: 1;
+        margin-top: 1rem;
+      }
+      /* chatbot */
+      #closeChat {
+        cursor: pointer;
+        z-index: 60;
+        background: transparent;
+        border: none;
+        font-size: 1.2rem;
+        padding: 0 10px;
+      }
+      #chatWindow {
+        transition: transform 0.3s ease, opacity 0.2s;
+        transform-origin: bottom right;
+        box-shadow: 0 20px 40px rgba(0, 20, 40, 0.8);
+      }
+      .chat-hidden {
+        transform: scale(0);
+        opacity: 0;
+        pointer-events: none;
+      }
+      /* quick reply chips */
+      .quick-chip {
+        background: rgba(45, 55, 75, 0.8);
+        border: 1px solid #3b6e9f;
+        border-radius: 30px;
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        color: #bbdbff;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+      .quick-chip:hover {
+        background: #2f4b70;
+        color: white;
+      }
+      /* ===== NAVBAR & HAMBURGER (fixed) ===== */
+      #navbar {
+        transition: background 0.3s, box-shadow 0.3s;
+      }
+      #desktopMenu a,
+      #mobileMenu a {
+        position: relative;
+      }
+      #desktopMenu a::after,
+      #mobileMenu a::after {
+        content: "";
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0%;
+        height: 2px;
+        background: linear-gradient(90deg, #4aa3ff, #b47aff);
+        transition: width 0.2s;
+      }
+      #desktopMenu a:hover::after,
+      #mobileMenu a:hover::after {
+        width: 100%;
+      }
+
+      /* ===== HAMBURGER BUTTON (perfect circle) ===== */
+      #hamburgerBtn {
+        display: none; /* hidden by default on desktop */
+        cursor: pointer;
+        font-size: 1.8rem;
+        color: #e2e8f0;
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(4px);
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, transform 0.1s;
+        border: 1px solid rgba(100, 180, 255, 0.3);
+      }
+      #hamburgerBtn:hover {
+        background: rgba(45, 60, 85, 0.8);
+        border-color: #4aa3ff;
+        transform: scale(1.05);
+      }
+      #hamburgerBtn i {
+        font-size: 1.6rem;
+      }
+
+      /* ===== MOBILE MENU (centered dropdown) ===== */
+      #mobileMenu {
+        position: absolute;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 380px;
+        background: rgba(18, 22, 32, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(100, 180, 255, 0.2);
+        border-radius: 24px;
+        padding: 1.5rem 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.2rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+      }
+      #mobileMenu.hidden {
+        display: none;
+      }
+      #mobileMenu a {
+        font-size: 1.2rem;
+        font-weight: 500;
+        padding: 0.6rem 0;
+        width: 85%;
+        text-align: center;
+        color: #d1e0ff;
+        border-radius: 40px;
+        transition: background 0.2s, color 0.2s;
+        border: 1px solid transparent;
+      }
+      #mobileMenu a:hover {
+        background: rgba(45, 90, 140, 0.4);
+        color: white;
+        border-color: #4aa3ff;
+      }
+
+      /* responsive visibility rules */
+      @media (max-width: 768px) {
+        #desktopMenu {
+          display: none !important;
+        }
+        #hamburgerBtn {
+          display: flex !important; /* always visible on mobile */
+        }
+      }
+
+      /* scroll state for desktop – shows hamburger when scrolled */
+      body.scrolled #desktopMenu {
+        display: none !important;
+      }
+      body.scrolled #hamburgerBtn {
+        display: flex !important;
+      }
+
+      /* soft skills card */
+      .soft-skill-card {
+        background: rgba(30, 35, 48, 0.6);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(100, 160, 255, 0.15);
+        border-radius: 1.5rem;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        transition: 0.2s;
+      }
+      .soft-skill-card:hover {
+        border-color: #4aa3ff;
+        transform: scale(1.02);
+      }
+      .soft-skill-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.75rem;
+        color: #8bbfff;
+      }
+      /* animated about paragraph */
+      .about-animated {
+        animation: glowPulse 3s infinite alternate, slideIn 1s ease-out;
+      }
+      @keyframes glowPulse {
+        0% {
+          box-shadow: 0 0 5px rgba(0, 160, 255, 0.3),
+            0 0 15px rgba(100, 0, 255, 0.2);
+        }
+        100% {
+          box-shadow: 0 0 20px rgba(0, 200, 255, 0.6),
+            0 0 40px rgba(150, 0, 255, 0.4);
+        }
+      }
+      @keyframes slideIn {
+        0% {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      /* reduce spacing between sections */
+      section {
+        scroll-margin-top: 5rem;
+      }
+      .section-padding {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+      }
+      @media (min-width: 768px) {
+        .section-padding {
+          padding-top: 5rem;
+          padding-bottom: 5rem;
+        }
+      }
+
+      /* Responsive chatbot window */
+      @media (max-width: 640px) {
+        #chatWindow {
+          width: 90vw !important;
+          right: 5vw !important;
+          bottom: 70px !important;
+          max-width: 360px;
+        }
+        #chatWindow .bg-gradient-to-r {
+          font-size: 0.95rem;
+          padding: 0.75rem;
+        }
+        #chatInput {
+          font-size: 0.85rem;
+          padding: 0.5rem 1rem;
+        }
+        .quick-chip {
+          font-size: 0.7rem;
+          padding: 4px 10px;
+        }
+        #chatToggle {
+          width: 48px;
+          height: 48px;
+          font-size: 1.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- cursor glow -->
+    <div
+      class="fixed w-96 h-96 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full pointer-events-none blur-3xl -z-5"
+      style="transform: translate(-50%, -50%)"
+      id="cursorGlow"
+    ></div>
+
+    <!-- NAVBAR -->
+    <nav
+      id="navbar"
+      class="fixed top-0 w-full z-50 glass py-4 px-6 flex items-center justify-between"
+    >
+      <div class="text-2xl font-semibold tracking-tight text-white pl-2">
+        <span
+          class="bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent"
+          >Dharani</span
+        >
+      </div>
+      <!-- desktop menu -->
+      <div
+        id="desktopMenu"
+        class="hidden md:flex space-x-8 text-base font-medium text-gray-300 pr-4"
+      >
+        <a href="#home" class="hover:text-white transition">Home</a>
+        <a href="#skills" class="hover:text-white transition">Skills</a>
+        <a href="#projects" class="hover:text-white transition">Projects</a>
+        <a href="#contact" class="hover:text-white transition">Contact</a>
+        <a href="#" id="chatIconNav" class="text-blue-300 hover:text-white"
+          ><i class="fas fa-robot mr-1"></i>AI</a
+        >
+      </div>
+      <!-- hamburger button (perfect circle) -->
+      <div
+        id="hamburgerBtn"
+        class="cursor-pointer text-2xl text-gray-300 hover:text-white"
+      >
+        <i class="fas fa-bars"></i>
+      </div>
+      <!-- mobile menu dropdown (centered, professional) -->
+      <div
+        id="mobileMenu"
+        class="hidden absolute top-16 left-0 w-full glass flex-col items-center py-6 space-y-5 text-lg md:hidden border-t border-blue-900/50"
+      >
+        <a href="#home" class="text-gray-200 hover:text-white">Home</a>
+        <a href="#skills" class="text-gray-200 hover:text-white">Skills</a>
+        <a href="#projects" class="text-gray-200 hover:text-white">Projects</a>
+        <a href="#contact" class="text-gray-200 hover:text-white">Contact</a>
+        <a href="#" id="chatIconMobile" class="text-blue-300 hover:text-white"
+          ><i class="fas fa-robot mr-1"></i>AI Assistant</a
+        >
+      </div>
+    </nav>
+
+    <main>
+      <!-- HOME SECTION -->
+      <section
+        id="home"
+        class="min-h-screen flex items-center px-4 md:px-16 relative overflow-hidden pt-24 md:pt-0 section-padding"
+      >
+        <!-- starfield overlay -->
+        <div
+          class="absolute inset-0 opacity-20 pointer-events-none"
+          style="
+            background-image: radial-gradient(
+                circle at 20% 30%,
+                #ffffff 1px,
+                transparent 1px
+              ),
+              radial-gradient(circle at 80% 70%, #aaccff 1px, transparent 1px);
+            background-size: 80px 80px;
+          "
+        ></div>
+        <div
+          class="relative z-10 w-full flex flex-col md:flex-row items-center gap-8 lg:gap-16 max-w-7xl mx-auto"
+        >
+          <!-- LEFT: static circular image (flat, no rotation) -->
+          <div class="w-full md:w-5/12 flex justify-center">
+            <div id="profile-3d-container" class="shadow-2xl"></div>
+          </div>
+          <!-- RIGHT: text content -->
+          <div class="w-full md:w-7/12 text-center md:text-left space-y-6">
+            <h1
+              class="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight"
+            >
+              <span
+                class="bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 bg-clip-text text-transparent"
+                >Hello, I'm</span
+              ><br />
+              <span class="text-white">Dharani</span>
+            </h1>
+            <div class="h-14 text-2xl md:text-3xl text-blue-300 font-light">
+              <span id="typing"></span><span class="animate-pulse">|</span>
+            </div>
+            <!-- about paragraph -->
+            <div
+              class="glass p-6 rounded-2xl text-gray-200 max-w-xl border border-blue-500/20 about-animated"
+              id="aboutParagraph"
+            >
+              <p class="text-base md:text-lg leading-relaxed">
+                <span class="text-blue-300 font-semibold">Data Analyst</span>
+                with a computer science engineering background. I turn complex
+                data into strategic decisions — blending Python, SQL, Power BI,
+                and machine learning.
+                <span class="text-white"
+                  >Passionate about delivering insights that drive growth.</span
+                >
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SKILLS SECTION -->
+      <section id="skills" class="section-padding px-4 max-w-6xl mx-auto">
+        <h2 class="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
+          <span
+            class="bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent"
+            >AI SKILL MATRIX</span
+          >
+        </h2>
+        <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+          Technical proficiency
+        </p>
+        <!-- SVG gradient -->
+        <svg width="0" height="0" style="position: absolute">
+          <linearGradient
+            id="gradientSkill"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="100%"
+          >
+            <stop offset="0%" stop-color="#4aa3ff" />
+            <stop offset="100%" stop-color="#b47aff" />
+          </linearGradient>
+        </svg>
+        <div class="flex flex-wrap justify-center gap-8 items-start">
+          <!-- skill items -->
+          <div class="skill-item">
+            <i class="fab fa-python skill-icon text-blue-300"></i>
+            <div class="skill-circle" data-percent="50">
+              <svg>
+                <circle class="skill-circle-bg" cx="60" cy="60" r="50" />
+                <circle
+                  class="skill-circle-progress"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  data-percent="50"
+                />
+              </svg>
+              <div class="skill-percent">0%</div>
+            </div>
+            <span class="block text-center mt-2 font-medium text-gray-300"
+              >Python</span
+            >
+          </div>
+          <div class="skill-item">
+            <i class="fas fa-chart-pie skill-icon text-green-300"></i>
+            <div class="skill-circle" data-percent="50">
+              <svg>
+                <circle class="skill-circle-bg" cx="60" cy="60" r="50" />
+                <circle
+                  class="skill-circle-progress"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  data-percent="50"
+                />
+              </svg>
+              <div class="skill-percent">0%</div>
+            </div>
+            <span class="block text-center mt-2 font-medium text-gray-300"
+              >Power BI</span
+            >
+          </div>
+          <div class="skill-item">
+            <i class="fas fa-file-excel skill-icon text-green-400"></i>
+            <div class="skill-circle" data-percent="75">
+              <svg>
+                <circle class="skill-circle-bg" cx="60" cy="60" r="50" />
+                <circle
+                  class="skill-circle-progress"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  data-percent="75"
+                />
+              </svg>
+              <div class="skill-percent">0%</div>
+            </div>
+            <span class="block text-center mt-2 font-medium text-gray-300"
+              >Excel</span
+            >
+          </div>
+          <div class="skill-item">
+            <i class="fas fa-database skill-icon text-yellow-300"></i>
+            <div class="skill-circle" data-percent="80">
+              <svg>
+                <circle class="skill-circle-bg" cx="60" cy="60" r="50" />
+                <circle
+                  class="skill-circle-progress"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  data-percent="80"
+                />
+              </svg>
+              <div class="skill-percent">0%</div>
+            </div>
+            <span class="block text-center mt-2 font-medium text-gray-300"
+              >MySQL</span
+            >
+          </div>
+          <div class="skill-item">
+            <i class="fab fa-github skill-icon text-gray-300"></i>
+            <div class="skill-circle" data-percent="50">
+              <svg>
+                <circle class="skill-circle-bg" cx="60" cy="60" r="50" />
+                <circle
+                  class="skill-circle-progress"
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  data-percent="50"
+                />
+              </svg>
+              <div class="skill-percent">0%</div>
+            </div>
+            <span class="block text-center mt-2 font-medium text-gray-300"
+              >GitHub</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <!-- SOFT SKILLS SECTION -->
+      <section id="softskills" class="section-padding px-4 max-w-5xl mx-auto">
+        <h2 class="text-3xl md:text-4xl font-bold text-center mb-10 text-white">
+          <span
+            class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent"
+            >Soft skills</span
+          >
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div class="soft-skill-card">
+            <i class="fas fa-users soft-skill-icon"></i>
+            <h3 class="text-xl font-semibold text-blue-200">Leadership</h3>
+            <p class="text-sm text-gray-400 mt-2">
+              Guiding teams, mentoring, and project coordination
+            </p>
+          </div>
+          <div class="soft-skill-card">
+            <i class="fas fa-people-group soft-skill-icon"></i>
+            <h3 class="text-xl font-semibold text-blue-200">Team Leadership</h3>
+            <p class="text-sm text-gray-400 mt-2">
+              Collaborative spirit, conflict resolution, agile mindset
+            </p>
+          </div>
+          <div class="soft-skill-card">
+            <i class="fas fa-rocket soft-skill-icon"></i>
+            <h3 class="text-xl font-semibold text-blue-200">Quick Learner</h3>
+            <p class="text-sm text-gray-400 mt-2">
+              Rapidly adapt to new tools, frameworks, and domains
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROJECTS SECTION -->
+      <section id="projects" class="section-padding px-4 max-w-7xl mx-auto">
+        <h2 class="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
+          <span
+            class="bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent"
+            >Featured Projects</span
+          >
+        </h2>
+        <p class="text-center text-gray-400 mb-12 max-w-2xl mx-auto">
+          Real-world AI & data applications
+        </p>
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 perspective">
+          <!-- project cards -->
+          <div
+            class="project-card rounded-2xl p-5 cursor-pointer"
+            onclick="this.classList.toggle('expanded')"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-shield-alt text-blue-400 text-xl"></i>
+              <h3 class="text-lg font-semibold">Phishing Detection</h3>
+            </div>
+            <p class="text-xs text-blue-300 mb-2">Python · Flask · ML</p>
+            <div class="project-details text-sm text-gray-300">
+              <p class="mb-2">
+                Real‑time ML system that detects phishing URLs via Flask API +
+                Chrome extension.
+              </p>
+              <p class="text-blue-300 text-xs">
+                <i class="fas fa-code"></i> Skills: Python, scikit‑learn, Chrome
+                API
+              </p>
+            </div>
+          </div>
+          <div
+            class="project-card rounded-2xl p-5 cursor-pointer"
+            onclick="this.classList.toggle('expanded')"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fab fa-spotify text-green-400 text-xl"></i>
+              <h3 class="text-lg font-semibold">Spotify Dashboard</h3>
+            </div>
+            <p class="text-xs text-blue-300 mb-2">Excel · SQL · Power BI</p>
+            <div class="project-details text-sm text-gray-300">
+              <p class="mb-2">
+                Pipeline & dashboard for Spotify trends: 10M+ rows processed.
+              </p>
+              <p class="text-blue-300 text-xs">
+                <i class="fas fa-code"></i> Skills: Excel, SQL, Power BI
+              </p>
+            </div>
+          </div>
+          <div
+            class="project-card rounded-2xl p-5 cursor-pointer"
+            onclick="this.classList.toggle('expanded')"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-search text-purple-400 text-xl"></i>
+              <h3 class="text-lg font-semibold">SQL Exploratory</h3>
+            </div>
+            <p class="text-xs text-blue-300 mb-2">SQL · MySQL</p>
+            <div class="project-details text-sm text-gray-300">
+              <p class="mb-2">
+                Advanced queries, window functions, business insights from 5+
+                databases.
+              </p>
+              <p class="text-blue-300 text-xs">
+                <i class="fas fa-code"></i> Skills: SQL, MySQL, query
+                optimization
+              </p>
+            </div>
+          </div>
+          <div
+            class="project-card rounded-2xl p-5 cursor-pointer"
+            onclick="this.classList.toggle('expanded')"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-chart-bar text-yellow-400 text-xl"></i>
+              <h3 class="text-lg font-semibold">Excel Sales Dashboard</h3>
+            </div>
+            <p class="text-xs text-blue-300 mb-2">Excel · pivot tables</p>
+            <div class="project-details text-sm text-gray-300">
+              <p class="mb-2">
+                Interactive dashboard with KPIs, trends, and automated
+                reporting.
+              </p>
+              <p class="text-blue-300 text-xs">
+                <i class="fas fa-code"></i> skills: Excel, VBA, pivot charts
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT SECTION -->
+      <section id="contact" class="section-padding px-4 max-w-5xl mx-auto">
+        <h2 class="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
+          <span
+            class="bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent"
+            >Connect</span
+          >
+        </h2>
+        <p class="text-center text-gray-400 mb-12">
+          Let's build something data‑driven
+        </p>
+        <div
+          class="glass rounded-3xl p-8 md:p-12 flex flex-col md:flex-row gap-10 border border-blue-500/20"
+        >
+          <div
+            class="md:w-1/2 flex flex-col items-center justify-center space-y-6"
+          >
+            <div class="flex gap-8 text-5xl text-gray-300">
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                class="hover:text-blue-400 transition"
+                ><i class="fab fa-linkedin"></i
+              ></a>
+              <a
+                href="https://github.com"
+                target="_blank"
+                class="hover:text-blue-400 transition"
+                ><i class="fab fa-github"></i
+              ></a>
+              <a
+                href="mailto:dharani.c@example.com"
+                class="hover:text-blue-400 transition"
+                ><i class="fas fa-envelope"></i
+              ></a>
+            </div>
+          </div>
+          <div class="md:w-1/2">
+            <form id="contactForm" class="space-y-6">
+              <div class="relative">
+                <input
+                  type="text"
+                  id="name"
+                  placeholder=" "
+                  class="peer w-full bg-transparent border-b border-blue-500/40 py-2 px-1 focus:outline-none focus:border-blue-400 text-gray-200"
+                />
+                <label
+                  for="name"
+                  class="absolute left-1 -top-4 text-sm text-blue-300/70 transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:-top-4 peer-focus:text-sm peer-focus:text-blue-300"
+                  >Name</label
+                >
+              </div>
+              <div class="relative">
+                <input
+                  type="email"
+                  id="email"
+                  placeholder=" "
+                  class="peer w-full bg-transparent border-b border-blue-500/40 py-2 px-1 focus:outline-none focus:border-blue-400 text-gray-200"
+                />
+                <label
+                  for="email"
+                  class="absolute left-1 -top-4 text-sm text-blue-300/70 transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:-top-4"
+                  >Email</label
+                >
+              </div>
+              <div class="relative">
+                <textarea
+                  id="message"
+                  rows="3"
+                  placeholder=" "
+                  class="peer w-full bg-transparent border-b border-blue-500/40 py-2 px-1 focus:outline-none focus:border-blue-400 text-gray-200"
+                ></textarea>
+                <label
+                  for="message"
+                  class="absolute left-1 -top-4 text-sm text-blue-300/70 transition-all peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-focus:-top-4"
+                  >Message</label
+                >
+              </div>
+              <button
+                type="submit"
+                class="w-full py-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 font-medium text-white hover:shadow-lg hover:shadow-blue-500/30 transition"
+              >
+                Send Message <i class="fas fa-paper-plane ml-2 text-sm"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- AI CHATBOT -->
+    <div id="chatbotContainer" class="fixed bottom-6 right-6 z-50">
+      <button
+        id="chatToggle"
+        class="w-14 h-14 rounded-full glass border border-blue-400/50 text-blue-300 text-2xl flex items-center justify-center hover:scale-110 transition shadow-lg"
+      >
+        <i class="fas fa-robot"></i>
+      </button>
+      <div
+        id="chatWindow"
+        class="chat-hidden absolute bottom-16 right-0 w-80 sm:w-96 glass rounded-2xl flex flex-col overflow-hidden border border-blue-500/30"
+      >
+        <div
+          class="bg-gradient-to-r from-blue-700 to-purple-700 p-4 font-medium flex justify-between items-center text-white"
+        >
+          <span><i class="fas fa-robot mr-2"></i>Dharani's AI</span>
+          <button id="closeChat" class="text-white/80 hover:text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div
+          id="chatMessages"
+          class="flex-1 p-3 overflow-y-auto text-sm space-y-3 h-64"
+        >
+          <div class="text-left">
+            <span class="inline-block bg-blue-800/50 p-2 rounded-lg"
+              >Hi! I'm here to help. Ask me about skills, projects,
+              availability, or just say hi.</span
+            >
+          </div>
+        </div>
+        <!-- quick reply chips -->
+        <div class="flex flex-wrap gap-2 px-3 pb-2">
+          <span class="quick-chip" data-question="skills">skills</span>
+          <span class="quick-chip" data-question="projects">projects</span>
+          <span class="quick-chip" data-question="availability"
+            >availability</span
+          >
+          <span class="quick-chip" data-question="contact">contact</span>
+          <span class="quick-chip" data-question="summary">summary</span>
+        </div>
+        <div class="p-3 border-t border-blue-500/30 flex">
+          <input
+            id="chatInput"
+            type="text"
+            placeholder="ask me anything..."
+            class="flex-1 bg-transparent border border-blue-500/30 rounded-l-full px-4 py-2 text-sm focus:outline-none text-gray-200"
+          />
+          <button
+            id="sendChat"
+            class="bg-blue-700 px-4 rounded-r-full hover:bg-blue-800"
+          >
+            <i class="fas fa-paper-plane text-white"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // typing animation
+      const typingEl = document.getElementById("typing");
+      const phrases = [
+        "Data Analyst",
+        "Python Developer",
+        "Power BI Specialist",
+      ];
+      let i = 0,
+        j = 0,
+        isDeleting = false;
+      function typeEffect() {
+        if (i < phrases.length) {
+          if (!isDeleting && j <= phrases[i].length) {
+            typingEl.textContent = phrases[i].substring(0, j++);
+          } else if (isDeleting && j >= 0) {
+            typingEl.textContent = phrases[i].substring(0, j--);
+          }
+          if (j === phrases[i].length && !isDeleting) {
+            isDeleting = true;
+            setTimeout(typeEffect, 1500);
+            return;
+          } else if (j === 0 && isDeleting) {
+            isDeleting = false;
+            i = (i + 1) % phrases.length;
+          }
+        }
+        setTimeout(typeEffect, isDeleting ? 80 : 120);
+      }
+      typeEffect();
+
+      // ===== NAVBAR SCROLL & HAMBURGER (fixed) =====
+      const body = document.body;
+      function updateNav() {
+        if (window.innerWidth > 768) {
+          // desktop
+          if (window.scrollY > 60) {
+            body.classList.add("scrolled");
+          } else {
+            body.classList.remove("scrolled");
+          }
+        } else {
+          // on mobile, hamburger is always visible via media query; remove scrolled class to avoid conflicts
+          body.classList.remove("scrolled");
+        }
+      }
+      window.addEventListener("scroll", updateNav);
+      window.addEventListener("resize", updateNav);
+      updateNav();
+
+      // hamburger toggle
+      const hamburgerBtn = document.getElementById("hamburgerBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
+      hamburgerBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        mobileMenu.classList.toggle("hidden");
+      });
+
+      // close mobile menu when a link is clicked
+      document
+        .querySelectorAll("#mobileMenu a")
+        .forEach((link) =>
+          link.addEventListener("click", () =>
+            mobileMenu.classList.add("hidden")
+          )
+        );
+
+      // close mobile menu when clicking outside
+      document.addEventListener("click", (e) => {
+        if (
+          !mobileMenu.contains(e.target) &&
+          !hamburgerBtn.contains(e.target)
+        ) {
+          mobileMenu.classList.add("hidden");
+        }
+      });
+
+      // ===== FLAT CIRCLE WITH IMAGE CAROUSEL (static, no rotation) =====
+      const container = document.getElementById("profile-3d-container");
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({
+        alpha: true,
+        antialias: true,
+      });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setClearColor(0x000000, 0);
+      container.appendChild(renderer.domElement);
+
+      // Lights
+      const ambient = new THREE.AmbientLight(0x404060);
+      scene.add(ambient);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+      dirLight.position.set(1, 2, 3);
+      scene.add(dirLight);
+      const backLight = new THREE.PointLight(0x4466aa, 0.8);
+      backLight.position.set(-1, 0, -2);
+      scene.add(backLight);
+
+      // Helper: create a square texture from image URL (crops to fit)
+      function createSquareTexture(url) {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext("2d");
+            const scale = Math.max(
+              canvas.width / img.width,
+              canvas.height / img.height
+            );
+            const x = (canvas.width - img.width * scale) / 2;
+            const y = (canvas.height - img.height * scale) / 2;
+            ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.minFilter = THREE.LinearFilter;
+            texture.magFilter = THREE.LinearFilter;
+            resolve(texture);
+          };
+          img.src = url;
+        });
+      }
+
+      // Image URLs – replace with your own images
+      const imageUrls = ["img1.jpeg", "img2.jpg", "img4.jpg"];
+
+      // Load all textures first
+      Promise.all(imageUrls.map((url) => createSquareTexture(url))).then(
+        (textures) => {
+          // Create a flat circle (perfect for circular container)
+          const geometry = new THREE.CircleGeometry(1.5, 64);
+          const material = new THREE.MeshStandardMaterial({
+            map: textures[0],
+            side: THREE.DoubleSide,
+          });
+          const circle = new THREE.Mesh(geometry, material);
+          circle.position.set(0, 0, 0);
+          scene.add(circle);
+
+          // Add a glowing ring around the circle (rotates slowly for effect)
+          const ringGeo = new THREE.TorusGeometry(1.6, 0.05, 16, 100);
+          const ringMat = new THREE.MeshStandardMaterial({
+            color: 0x00aaff,
+            emissive: 0x004466,
+          });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.rotation.x = Math.PI / 2;
+          ring.rotation.z = 0;
+          ring.position.set(0, 0, 0);
+          scene.add(ring);
+
+          // Floating particles for ambiance
+          const particlesGeo = new THREE.BufferGeometry();
+          const particlesCount = 300;
+          const posArray = new Float32Array(particlesCount * 3);
+          for (let i = 0; i < particlesCount * 3; i += 3) {
+            const r = 2.2 + Math.random() * 1.8;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            posArray[i] = r * Math.sin(phi) * Math.cos(theta);
+            posArray[i + 1] = r * Math.sin(phi) * Math.sin(theta);
+            posArray[i + 2] = r * Math.cos(phi);
+          }
+          particlesGeo.setAttribute(
+            "position",
+            new THREE.BufferAttribute(posArray, 3)
+          );
+          const particlesMat = new THREE.PointsMaterial({
+            size: 0.06,
+            color: 0x88aaff,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+          });
+          const particles = new THREE.Points(particlesGeo, particlesMat);
+          scene.add(particles);
+
+          // Position camera to look directly at the center
+          camera.position.set(0, 0, 4);
+          camera.lookAt(0, 0, 0);
+
+          // Cycle images every 3 seconds – circle remains still
+          let currentIndex = 0;
+          setInterval(() => {
+            currentIndex = (currentIndex + 1) % textures.length;
+            circle.material.map = textures[currentIndex];
+            circle.material.needsUpdate = true;
+          }, 3000);
+
+          function animate3D() {
+            requestAnimationFrame(animate3D);
+            // Only ring and particles rotate – the circle stays completely still
+            ring.rotation.y += 0.002;
+            ring.rotation.x += 0.001;
+            particles.rotation.y += 0.0005;
+            renderer.render(scene, camera);
+          }
+          animate3D();
+        }
+      );
+
+      window.addEventListener("resize", () => {
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+      });
+
+      // ===== GSAP SKILL CIRCLES – animate percentages =====
+      gsap.registerPlugin(ScrollTrigger);
+      document.querySelectorAll(".skill-circle").forEach((circleDiv) => {
+        const percent = parseInt(circleDiv.dataset.percent);
+        const progressCircle = circleDiv.querySelector(
+          ".skill-circle-progress"
+        );
+        const percentSpan = circleDiv.querySelector(".skill-percent");
+        const radius = 50;
+        const circumference = 2 * Math.PI * radius; // 314.159...
+        const offset = circumference * (1 - percent / 100);
+
+        // Set initial stroke-dashoffset to circumference (0% shown)
+        progressCircle.style.strokeDashoffset = circumference;
+
+        // Animate on scroll
+        gsap.to(progressCircle, {
+          strokeDashoffset: offset,
+          duration: 1.5,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: circleDiv,
+            start: "top 80%",
+            toggleActions: "play none none none",
+          },
+          onUpdate: function () {
+            const currentOffset =
+              progressCircle.getAttribute("stroke-dashoffset");
+            const progress = 1 - currentOffset / circumference;
+            const currentPercent = Math.min(
+              percent,
+              Math.round(progress * 100)
+            );
+            percentSpan.textContent = currentPercent + "%";
+          },
+        });
+      });
+
+      // contact form
+      document.getElementById("contactForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        alert("✨ Message sent (demo). Dharani will reply soon!");
+        e.target.reset();
+      });
+
+      // ===== CHATBOT =====
+      const chatToggle = document.getElementById("chatToggle");
+      const chatWindow = document.getElementById("chatWindow");
+      const closeChat = document.getElementById("closeChat");
+      const sendChat = document.getElementById("sendChat");
+      const chatInput = document.getElementById("chatInput");
+      const chatMessages = document.getElementById("chatMessages");
+      const chatIconNav = document.getElementById("chatIconNav");
+      const chatIconMobile = document.getElementById("chatIconMobile");
+      const quickChips = document.querySelectorAll(".quick-chip");
+
+      chatWindow.addEventListener("click", (e) => e.stopPropagation());
+
+      function toggleChat(show) {
+        if (show) {
+          chatWindow.classList.remove("chat-hidden");
+          setTimeout(() => chatInput.focus(), 300);
+        } else {
+          chatWindow.classList.add("chat-hidden");
+        }
+      }
+
+      chatToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleChat(true);
+      });
+
+      closeChat.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleChat(false);
+      });
+
+      [chatIconNav, chatIconMobile].forEach((icon) => {
+        if (icon) {
+          icon.addEventListener("click", (e) => {
+            e.preventDefault();
+            toggleChat(true);
+            mobileMenu.classList.add("hidden");
+          });
+        }
+      });
+
+      function addMessage(text, sender = "user") {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = sender === "user" ? "text-right" : "text-left";
+        msgDiv.innerHTML = `<span class="inline-block ${
+          sender === "user" ? "bg-blue-700" : "bg-purple-700"
+        } p-2 rounded-lg max-w-[80%] break-words">${text}</span>`;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function botResponse(userMsg) {
+        const lower = userMsg.toLowerCase().trim();
+        if (
+          lower.includes("skill") ||
+          lower.includes("python") ||
+          lower.includes("sql") ||
+          lower.includes("power bi") ||
+          lower.includes("excel") ||
+          lower.includes("mysql") ||
+          lower.includes("github")
+        ) {
+          return "Dharani is skilled in Python, SQL, Power BI, Excel, MySQL, and GitHub (50–80% proficiency). Check the Skills section!";
+        }
+        if (
+          lower.includes("project") ||
+          lower.includes("phishing") ||
+          lower.includes("spotify") ||
+          lower.includes("dashboard") ||
+          lower.includes("sql exploratory") ||
+          lower.includes("excel sales")
+        ) {
+          return "She has built a Phishing Detection system (Python/ML), Spotify dashboard (Power BI), SQL analysis, and Excel dashboard. See the Projects section!";
+        }
+        if (
+          lower.includes("available") ||
+          lower.includes("open") ||
+          lower.includes("work") ||
+          lower.includes("hire") ||
+          lower.includes("job")
+        ) {
+          return "✅ Dharani is currently open to work. Please contact her via email or LinkedIn to confirm specific opportunities.";
+        }
+        if (
+          lower.includes("contact") ||
+          lower.includes("email") ||
+          lower.includes("linkedin") ||
+          lower.includes("github") ||
+          lower.includes("reach")
+        ) {
+          return "You can reach her at dharani.c@example.com, or through the LinkedIn/GitHub icons in the Contact section.";
+        }
+        if (
+          lower.includes("summary") ||
+          lower.includes("about") ||
+          lower.includes("who is") ||
+          lower.includes("tell me about")
+        ) {
+          return "Dharani: data analyst with a computer science engineering background. Passionate about turning data into decisions. Expert in Python, SQL, Power BI, and machine learning. Open to work.";
+        }
+        if (
+          lower.includes("hello") ||
+          lower.includes("hi") ||
+          lower.includes("hey")
+        ) {
+          return "Hello! I'm Dharani's AI assistant. Ask me about skills, projects, availability, contact, or just type 'summary'.";
+        }
+        return "I'm not sure. Try: skills, projects, availability, contact, or summary.";
+      }
+
+      sendChat.addEventListener("click", () => {
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+        addMessage(msg, "user");
+        chatInput.value = "";
+        setTimeout(() => addMessage(botResponse(msg), "bot"), 400);
+      });
+
+      chatInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") sendChat.click();
+      });
+
+      quickChips.forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const question = chip.dataset.question;
+          addMessage(question, "user");
+          setTimeout(() => addMessage(botResponse(question), "bot"), 300);
+        });
+      });
+
+      // cursor glow
+      const glow = document.getElementById("cursorGlow");
+      document.addEventListener("mousemove", (e) => {
+        glow.style.left = e.clientX + "px";
+        glow.style.top = e.clientY + "px";
+      });
+    </script>
+  </body>
+</html>
